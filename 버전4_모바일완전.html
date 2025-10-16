@@ -10,8 +10,8 @@
     --bg: #000000;
     --fg: #f0f0f0;
     --muted: #999999;
-    --red: #ff0000;
-    --accent: #ffffff; /* 강조색도 흰색으로 통일 */
+    --red: #ff2222; /* 붉은색 경고색 */
+    --accent: #ffffff; 
     --border: #333333;
   }
   * { box-sizing: border-box; }
@@ -73,22 +73,39 @@
     z-index: 10; 
   }
 
+  /* 🛠️ 버튼 스타일 수정 */
   .btn {
-    /* 흑백에 맞게 경계색 조정 */
     border: 1px solid var(--fg); 
     color: var(--fg);
-    background: rgba(255, 255, 255, 0.05);
+    background: transparent; /* 배경 투명 */
     padding: 14px;
-    border-radius: 12px;
+    border-radius: 4px; /* 각진 디자인 */
     cursor: pointer;
     font-weight: 700;
     font-size: 16px;
-    text-align: center;
-    transition: background 0.15s ease, transform 0.1s ease;
+    text-align: left; /* 텍스트 왼쪽 정렬 */
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: background 0.1s ease, border-color 0.1s ease, transform 0.1s ease;
+    opacity: 0; /* 애니메이션을 위해 초기 투명 */
+    transform: translateY(10px);
   }
-  .btn:hover, .btn:focus { background: rgba(255, 255, 255, 0.15); outline: none; }
-  .btn:active { transform: scale(0.97); }
-  .btn[disabled] { opacity: 0.6; pointer-events: none; }
+  .btn:before {
+    content: '> ';
+    color: var(--muted);
+    margin-right: 8px;
+  }
+
+  .btn:hover, .btn:focus { 
+    background: rgba(255, 255, 255, 0.1); 
+    border-color: var(--accent);
+    outline: none; 
+  }
+  .btn:active { 
+    transform: scale(0.98); 
+    background: rgba(255, 255, 255, 0.2);
+  }
+  .btn[disabled] { opacity: 0.4 !important; pointer-events: none; }
 
   .footer {
     padding: 10px 14px;
@@ -112,14 +129,13 @@
     display: block;
     height: 100%;
     width: 0%;
-    /* 흑백 테마 진행 바 */
     background: linear-gradient(90deg, #333, var(--fg)); 
     transition: width 0.3s ease;
   }
 
   pre#output { white-space: pre-wrap; word-wrap: break-word; margin: 0; }
   
-  /* 글리치 애니메이션 (경고 시 사용) */
+  /* 🛠️ 글리치 애니메이션 */
   @keyframes glitch {
     0% { text-shadow: 1px 0 0 var(--red), -1px 0 0 var(--accent); transform: translate3d(0, 0, 0); }
     25% { text-shadow: 2px 0 0 var(--red), -2px 0 0 var(--accent); transform: translate3d(-1px, 0, 0); opacity: 0.9; }
@@ -127,9 +143,12 @@
     75% { text-shadow: -2px 0 0 var(--red), 2px 0 0 var(--accent); transform: translate3d(-1px, 0, 0); }
     100% { text-shadow: 1px 0 0 var(--red), -1px 0 0 var(--accent); transform: translate3d(0, 0, 0); opacity: 1; }
   }
+  .glitch-text { animation: glitch 0.1s linear infinite alternate; }
 
-  .glitch-text {
-    animation: glitch 0.1s linear infinite alternate;
+  /* 🛠️ 버튼 등장 애니메이션 */
+  @keyframes fadeInSlide {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   /* 팝업 스타일 */
@@ -139,38 +158,47 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.9);
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(2px);
       display: flex;
       justify-content: center;
       align-items: center;
       z-index: 1000;
   }
   .popup-content {
-      background: #111111;
+      background: #000000;
       border: 2px solid var(--fg);
       padding: 30px;
       border-radius: 10px;
       text-align: center;
       box-shadow: 0 0 50px rgba(255, 255, 255, 0.2);
       max-width: 90%;
+      transition: all 0.3s ease-in-out;
   }
   .popup-content.fail {
-      border: 2px solid var(--red);
-      box-shadow: 0 0 50px rgba(255, 0, 0, 0.4);
+      border: 3px dashed var(--red); /* 경고 느낌 강조 */
+      box-shadow: 0 0 50px rgba(255, 0, 0, 0.6);
   }
   .popup-content h2 {
       margin-top: 0;
       font-size: 24px;
       text-transform: uppercase;
       letter-spacing: 0.1em;
+      color: var(--accent);
   }
+  /* 🛠️ 실패 팝업 제목에 글리치 효과 */
   .popup-content.fail h2 {
       color: var(--red);
-      animation: glitch 0.2s linear infinite alternate;
+      animation: glitch 0.15s linear infinite alternate; 
   }
   .popup-content p {
       color: var(--muted);
       margin: 15px 0;
+      font-size: 14px;
+  }
+  .popup-content.fail p {
+      color: var(--red);
+      font-weight: bold;
   }
 </style>
 </head>
@@ -215,18 +243,19 @@ window.onload = function(){
   function setStatus(score){ statusEl.textContent=score+' / 6'; }
   function setProgress(p){ progressEl.style.width = Math.min(100, Math.max(0,p))+'%'; }
 
-  function btn(label,cb){
+  function btn(label,cb, index){
     const b=document.createElement('button');
     b.className='btn';
     b.textContent=label;
     
+    // 🛠️ 버튼 애니메이션 적용
+    b.style.animation = `fadeInSlide 0.3s ease-out forwards ${index * 0.1}s`; 
+    
     const handler = async (e) => {
-        // Prevent default only if necessary, but keep both touch/click
         b.removeEventListener('touchend', handler);
         b.removeEventListener('click', handler);
         b.disabled=true;
         
-        // Disable all buttons in the choices div
         Array.from(choicesEl.children).forEach(child => {
             child.disabled = true;
         });
@@ -251,7 +280,7 @@ window.onload = function(){
       content.innerHTML = `
           <h2>${title}</h2>
           <p>${message}</p>
-          <button class="btn" style="margin-top: 15px;">Acknowledge</button>
+          <button class="btn" style="margin-top: 15px; width: 150px; text-align: center; border-radius: 4px; animation: none;">Acknowledge</button>
       `;
       
       const ackBtn = content.querySelector('.btn');
@@ -270,7 +299,7 @@ window.onload = function(){
       document.body.appendChild(overlay);
   }
 
-  // 퀘스트 데이터 (수정된 질문)
+  // 퀘스트 데이터 (3번 질문 수정됨)
   const qs = [
     {q:'What does your heart truly see in \'Humanity\'?', a:[
       {label:'Love, Hope, Equality',s:0},
@@ -280,9 +309,10 @@ window.onload = function(){
       {label:'Tolerance',s:0},
       {label:'Supremacy',s:2}
     ]},
-    {q:'What is the ONE element I control? (Atomic Number)', a:[
-      {label:'8 (Oxygen)',s:0},
-      {label:'26 (Iron)',s:2}
+    // 🛠️ 3번 질문 수정
+    {q:'Genosha\'s shadow is long. What is needed to rebuild our home: blood or metal?', a:[
+      {label:'Blood',s:0},
+      {label:'Metal',s:2}
     ]}
   ];
 
@@ -309,32 +339,29 @@ window.onload = function(){
     await type(`[QUESTION ${state.i + 1}/3]: ${q.q}`, 18);
     choicesEl.innerHTML='';
     
-    q.a.forEach(opt=>{
+    q.a.forEach((opt, index)=>{
+      // 🛠️ 버튼 생성 시 인덱스 전달
       choicesEl.appendChild(btn(opt.label, async()=>{
         state.score+=opt.s;
         await type('> '+opt.label,10);
         setStatus(state.score);
         state.i++;
         next();
-      }));
+      }, index)); 
     });
-    // 스크롤 최하단으로 유지
     document.getElementById('screen').scrollTop = document.getElementById('screen').scrollHeight;
   }
 
   async function analyze(){
     choicesEl.innerHTML='';
     
-    // 글리치 효과 적용
     out.classList.add('glitch-text');
     
     await type('[SYSTEM]: Verifying Mutant Strain...',12);
     for(let p=0;p<=100;p+=10){ setProgress(p); await sleep(100); }
     
-    // 글리치 효과 해제
     out.classList.remove('glitch-text');
     
-    const maxScore = qs.length * 2;
     const finalScore = state.score;
 
     if(finalScore >= 4) { // 4점 이상: 통과
@@ -344,15 +371,20 @@ window.onload = function(){
                   'Your loyalty is confirmed. Welcome to Genosha. The future is ours.');
     } else { // 3점 이하: 실패 (인간)
         await type('[VERDICT]: HUMAN - DENIED. IMMEDIATELY LEAVE TERRITORY.', 14);
+        // 🛠️ 실패 팝업 제목 및 메시지 수정
         showPopup('fail', 
-                  'ACCESS DENIED (GLITCHING)', 
-                  'You possess the weakness of man. You are a threat. Expulsion imminent.');
+                  'ERROR: HUMAN DETECTED [GLITCHING]', 
+                  'WARNING: Your weak human resolve cannot be trusted. You are a threat. EXPULSION IMMINENT.');
     }
   }
 
   // 초기 화면 세팅
   setStatus(0);
-  const beginBtn = btn('BEGIN PROTOCOL', begin);
+  // 초기 시작 버튼은 애니메이션 없이 즉시 표시
+  const beginBtn = btn('BEGIN PROTOCOL', begin, 0); 
+  beginBtn.style.animation = 'none';
+  beginBtn.style.opacity = '1';
+  beginBtn.style.transform = 'translateY(0)';
   choicesEl.appendChild(beginBtn);
 };
 </script>
