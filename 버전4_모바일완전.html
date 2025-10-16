@@ -3,20 +3,22 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-<title>Judgment Day — Frank Castle Protocol (Mobile Final)</title>
+<title>Genosha Protocol — Mutant Verification</title>
 <style>
   :root {
-    --bg: #050607;
-    --fg: #e6e6e6;
-    --muted: #9aa0a6;
-    --red: #ff2b2b;
-    --accent: #ff3b3b;
+    /* 흑백 테마 */
+    --bg: #000000;
+    --fg: #f0f0f0;
+    --muted: #999999;
+    --red: #ff0000;
+    --accent: #ffffff; /* 강조색도 흰색으로 통일 */
+    --border: #333333;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; height: 100%; }
 
   body {
-    background: radial-gradient(1200px 800px at 50% -10%, #111 0%, var(--bg) 45%, #000 100%);
+    background: var(--bg);
     color: var(--fg);
     font-family: ui-monospace, Menlo, Consolas, monospace;
     display: flex;
@@ -31,18 +33,18 @@
     width: 95%;
     max-width: 800px;
     min-height: 90vh;
-    background: #0a0c0d;
+    background: #0a0a0a;
     border-radius: 18px;
-    border: 1px solid #161a1d;
+    border: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    box-shadow: 0 10px 40px rgba(0,0,0,.5);
+    box-shadow: 0 10px 40px rgba(0,0,0,.8);
   }
 
   header {
     padding: 14px 16px;
-    border-bottom: 1px solid #121416;
-    background: #0f1113;
+    border-bottom: 1px solid var(--border);
+    background: #111111;
     text-transform: uppercase;
     letter-spacing: .1em;
     font-size: 12px;
@@ -56,9 +58,8 @@
     flex: 1;
     overflow-y: auto;
     padding: 16px;
-    font-size: clamp(13px, 2.5vw, 15px);
+    font-size: clamp(14px, 2.5vw, 16px); 
     line-height: 1.55;
-    /* 🛠️ 추가: GIF 요소가 버튼 위에 겹쳐 터치 방해하지 않도록 z-index 확인 */
     position: relative;
     z-index: 1;
   }
@@ -67,31 +68,31 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-top: 12px;
-    /* 🛠️ 모바일 터치 확보를 위해 z-index 조정 */
+    margin-top: 20px;
     position: relative;
     z-index: 10; 
   }
 
   .btn {
-    border: 1px solid var(--red);
+    /* 흑백에 맞게 경계색 조정 */
+    border: 1px solid var(--fg); 
     color: var(--fg);
-    background: rgba(255, 20, 20, 0.05);
+    background: rgba(255, 255, 255, 0.05);
     padding: 14px;
     border-radius: 12px;
     cursor: pointer;
     font-weight: 700;
-    font-size: 15px;
+    font-size: 16px;
     text-align: center;
     transition: background 0.15s ease, transform 0.1s ease;
   }
-  .btn:hover, .btn:focus { background: rgba(255, 20, 20, 0.12); }
+  .btn:hover, .btn:focus { background: rgba(255, 255, 255, 0.15); outline: none; }
   .btn:active { transform: scale(0.97); }
   .btn[disabled] { opacity: 0.6; pointer-events: none; }
 
   .footer {
     padding: 10px 14px;
-    border-top: 1px solid #121416;
+    border-top: 1px solid var(--border);
     font-size: 12px;
     color: var(--muted);
     display: flex;
@@ -103,7 +104,7 @@
   .bar {
     height: 8px;
     border-radius: 999px;
-    background: #121416;
+    background: #121212;
     overflow: hidden;
     width: 40%;
   }
@@ -111,13 +112,14 @@
     display: block;
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #4f0000, var(--red));
+    /* 흑백 테마 진행 바 */
+    background: linear-gradient(90deg, #333, var(--fg)); 
     transition: width 0.3s ease;
   }
 
   pre#output { white-space: pre-wrap; word-wrap: break-word; margin: 0; }
   
-  /* 🛠️ 글리치 애니메이션 추가 */
+  /* 글리치 애니메이션 (경고 시 사용) */
   @keyframes glitch {
     0% { text-shadow: 1px 0 0 var(--red), -1px 0 0 var(--accent); transform: translate3d(0, 0, 0); }
     25% { text-shadow: 2px 0 0 var(--red), -2px 0 0 var(--accent); transform: translate3d(-1px, 0, 0); opacity: 0.9; }
@@ -129,21 +131,61 @@
   .glitch-text {
     animation: glitch 0.1s linear infinite alternate;
   }
+
+  /* 팝업 스타일 */
+  .popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+  }
+  .popup-content {
+      background: #111111;
+      border: 2px solid var(--fg);
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 0 50px rgba(255, 255, 255, 0.2);
+      max-width: 90%;
+  }
+  .popup-content.fail {
+      border: 2px solid var(--red);
+      box-shadow: 0 0 50px rgba(255, 0, 0, 0.4);
+  }
+  .popup-content h2 {
+      margin-top: 0;
+      font-size: 24px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+  }
+  .popup-content.fail h2 {
+      color: var(--red);
+      animation: glitch 0.2s linear infinite alternate;
+  }
+  .popup-content p {
+      color: var(--muted);
+      margin: 15px 0;
+  }
 </style>
 </head>
 <body>
 <div class="frame">
   <header>
-    <div>FRANK CASTLE <span class="badge">/ PROTOCOL</span></div>
-    <div class="dim">MOBILE</div>
+    <div>GENOSHA <span class="badge">/ PROTOCOL</span></div>
+    <div class="dim">VER. 1.1</div>
   </header>
   <div class="screen" id="screen">
-    <pre id="output">[READY] Press BEGIN to enter.</pre>
-    <img id="endingGif" src="" alt="Ending Visual" style="display:none; width:100%; max-width:600px; margin: 20px auto; border-radius: 8px;">
+    <pre id="output">[STATUS]: Awaiting Input.</pre>
     <div class="choices" id="choices"></div>
   </div>
   <div class="footer">
-    <div>STATUS: <span id="status" class="accent">IDLE</span></div>
+    <div>MUTANT SCORE: <span id="status" class="accent">0 / 6</span></div>
     <div class="bar"><span id="progress"></span></div>
   </div>
 </div>
@@ -170,7 +212,7 @@ window.onload = function(){
   }
 
   function clearOutput(){ out.textContent=''; }
-  function setStatus(t,cls='accent'){ statusEl.className=cls; statusEl.textContent=t; }
+  function setStatus(score){ statusEl.textContent=score+' / 6'; }
   function setProgress(p){ progressEl.style.width = Math.min(100, Math.max(0,p))+'%'; }
 
   function btn(label,cb){
@@ -178,14 +220,18 @@ window.onload = function(){
     b.className='btn';
     b.textContent=label;
     
-    // 🛠️ 모바일 터치 이슈 해결을 위한 eventListener 기반 로직 (이전 수정안 적용)
     const handler = async (e) => {
-        // e.preventDefault(); // 스크롤 방해 가능성 때문에 주석 처리
+        // Prevent default only if necessary, but keep both touch/click
         b.removeEventListener('touchend', handler);
         b.removeEventListener('click', handler);
         b.disabled=true;
+        
+        // Disable all buttons in the choices div
+        Array.from(choicesEl.children).forEach(child => {
+            child.disabled = true;
+        });
+
         await cb();
-        // 다음 버튼이 생성될 때까지 비활성화 유지
     };
     
     b.addEventListener('touchend', handler);
@@ -193,82 +239,120 @@ window.onload = function(){
     
     return b;
   }
+  
+  // 팝업 표시 함수
+  function showPopup(type, title, message) {
+      const overlay = document.createElement('div');
+      overlay.className = 'popup-overlay';
+      
+      const content = document.createElement('div');
+      content.className = 'popup-content ' + (type === 'fail' ? 'fail' : 'pass');
+      
+      content.innerHTML = `
+          <h2>${title}</h2>
+          <p>${message}</p>
+          <button class="btn" style="margin-top: 15px;">Acknowledge</button>
+      `;
+      
+      const ackBtn = content.querySelector('.btn');
+      ackBtn.addEventListener('click', () => {
+          document.body.removeChild(overlay);
+          if (type === 'fail') {
+              // 실패 시 강제 리로드 (첫 페이지로 이동)
+              location.reload(); 
+          } else {
+              // 성공 시 다음 페이지로 랜딩 (임시)
+              window.location.href = "http://simp.ly/publish/m1r6vd"; 
+          }
+      });
+      
+      overlay.appendChild(content);
+      document.body.appendChild(overlay);
+  }
 
-  const intro = [
-    '[ACCESSING SYSTEM...]',
-    'FRANK CASTLE_JUDGMENT PROTOCOL',
-    'You think you know justice?',
-    "Let's find out."
-  ];
-
+  // 퀘스트 데이터 (수정된 질문)
   const qs = [
-    {q:'Do you believe the law brings justice?', a:[
-      {label:'Yes',s:0},{label:'No',s:1},{label:'Justice comes from power',s:2}]},
-    {q:'Would you kill to protect your family?', a:[
-      {label:'Never',s:0},{label:'If no other choice',s:1},{label:'Without hesitation',s:2}]},
-    {q:'Are you a good person?', a:[
-      {label:'Yes',s:0},{label:'Not sure',s:1},{label:'No',s:2}]}
+    {q:'What does your heart truly see in \'Humanity\'?', a:[
+      {label:'Love, Hope, Equality',s:0},
+      {label:'Fear, Hatred, Disgust',s:2}
+    ]},
+    {q:'If Prof. X dreams of \'Coexistence\', what does Magneto demand for our kind?', a:[
+      {label:'Tolerance',s:0},
+      {label:'Supremacy',s:2}
+    ]},
+    {q:'What is the ONE element I control? (Atomic Number)', a:[
+      {label:'8 (Oxygen)',s:0},
+      {label:'26 (Iron)',s:2}
+    ]}
   ];
 
-  const verdicts={ low:'SPARED', mid:'GUILTY', high:'IRREDEEMABLE' };
+  const introText = [
+    '[SYSTEM]: Genosha Access Point Activated.',
+    'I swore then that I would not rest \'til I had created a world where my kind—mutants—could live free and safe and unafraid.',
+    'Prove your loyalty. Prove your difference.'
+  ];
+  
   const state={i:0,score:0};
 
   async function begin(){
     clearOutput(); choicesEl.innerHTML='';
-    await type('[BOOT SEQUENCE STARTED]');
-    for(const l of intro) await type(l,20);
+    setStatus(0);
+    await type('[BOOT SEQUENCE STARTED]', 10);
+    for(const l of introText) await type(l, 20);
     next();
   }
 
   async function next(){
     if(state.i>=qs.length){return analyze();}
+    
     const q=qs[state.i];
-    await type(q.q,18);
+    await type(`[QUESTION ${state.i + 1}/3]: ${q.q}`, 18);
     choicesEl.innerHTML='';
-    // 엔딩 GIF가 있다면 숨김 처리
-    document.getElementById('endingGif').style.display = 'none';
+    
     q.a.forEach(opt=>{
       choicesEl.appendChild(btn(opt.label, async()=>{
         state.score+=opt.s;
         await type('> '+opt.label,10);
+        setStatus(state.score);
         state.i++;
         next();
       }));
     });
+    // 스크롤 최하단으로 유지
+    document.getElementById('screen').scrollTop = document.getElementById('screen').scrollHeight;
   }
 
   async function analyze(){
     choicesEl.innerHTML='';
     
-    // 🛠️ 글리치 효과 적용
+    // 글리치 효과 적용
     out.classList.add('glitch-text');
     
-    await type('[SYSTEM]: Analyzing responses...',12);
+    await type('[SYSTEM]: Verifying Mutant Strain...',12);
     for(let p=0;p<=100;p+=10){ setProgress(p); await sleep(100); }
     
-    // 🛠️ 글리치 효과 해제
+    // 글리치 효과 해제
     out.classList.remove('glitch-text');
     
-    let v = state.score<=1?verdicts.low:state.score<=3?verdicts.mid:verdicts.high;
-    
-    // 🛠️ 엔딩별 GIF URL 정의 및 적용
-    const gifUrls = {
-        'SPARED': '[여기에 SPARED 엔딩 GIF 웹 주소를 넣어주세요]', 
-        'GUILTY': '[여기에 GUILTY 엔딩 GIF 웹 주소를 넣어주세요]', 
-        'IRREDEEMABLE': 'https://64.media.tumblr.com/7a11aa83b3f0345816fe55182d8fd99b/d6ef2c795654f2c0-7c/s500x750/7c5727969a34822a3495bcd1576c4a8d786b6072.gif' // 요청하신 GIF
-    };
-    
-    const gifEl = document.getElementById('endingGif');
-    gifEl.src = gifUrls[v];
-    gifEl.style.display = 'block'; // GIF 보이기
-    
-    await type('[CASTLE]: Verdict - '+v,14);
-    choicesEl.appendChild(btn('Run Again',()=>location.reload()));
+    const maxScore = qs.length * 2;
+    const finalScore = state.score;
+
+    if(finalScore >= 4) { // 4점 이상: 통과
+        await type('[VERDICT]: MUTANT - APPROVED. WELCOME HOME.', 14);
+        showPopup('pass', 
+                  'ACCESS GRANTED', 
+                  'Your loyalty is confirmed. Welcome to Genosha. The future is ours.');
+    } else { // 3점 이하: 실패 (인간)
+        await type('[VERDICT]: HUMAN - DENIED. IMMEDIATELY LEAVE TERRITORY.', 14);
+        showPopup('fail', 
+                  'ACCESS DENIED (GLITCHING)', 
+                  'You possess the weakness of man. You are a threat. Expulsion imminent.');
+    }
   }
 
   // 초기 화면 세팅
-  setStatus('IDLE');
-  const beginBtn = btn('BEGIN', begin);
+  setStatus(0);
+  const beginBtn = btn('BEGIN PROTOCOL', begin);
   choicesEl.appendChild(beginBtn);
 };
 </script>
