@@ -58,6 +58,9 @@
     padding: 16px;
     font-size: clamp(13px, 2.5vw, 15px);
     line-height: 1.55;
+    /* 🛠️ 추가: GIF 요소가 버튼 위에 겹쳐 터치 방해하지 않도록 z-index 확인 */
+    position: relative;
+    z-index: 1;
   }
 
   .choices {
@@ -65,6 +68,9 @@
     flex-direction: column;
     gap: 12px;
     margin-top: 12px;
+    /* 🛠️ 모바일 터치 확보를 위해 z-index 조정 */
+    position: relative;
+    z-index: 10; 
   }
 
   .btn {
@@ -110,6 +116,19 @@
   }
 
   pre#output { white-space: pre-wrap; word-wrap: break-word; margin: 0; }
+  
+  /* 🛠️ 글리치 애니메이션 추가 */
+  @keyframes glitch {
+    0% { text-shadow: 1px 0 0 var(--red), -1px 0 0 var(--accent); transform: translate3d(0, 0, 0); }
+    25% { text-shadow: 2px 0 0 var(--red), -2px 0 0 var(--accent); transform: translate3d(-1px, 0, 0); opacity: 0.9; }
+    50% { text-shadow: 1px 0 0 var(--red), -1px 0 0 var(--accent); transform: translate3d(1px, 0, 0); }
+    75% { text-shadow: -2px 0 0 var(--red), 2px 0 0 var(--accent); transform: translate3d(-1px, 0, 0); }
+    100% { text-shadow: 1px 0 0 var(--red), -1px 0 0 var(--accent); transform: translate3d(0, 0, 0); opacity: 1; }
+  }
+
+  .glitch-text {
+    animation: glitch 0.1s linear infinite alternate;
+  }
 </style>
 </head>
 <body>
@@ -120,6 +139,7 @@
   </header>
   <div class="screen" id="screen">
     <pre id="output">[READY] Press BEGIN to enter.</pre>
+    <img id="endingGif" src="" alt="Ending Visual" style="display:none; width:100%; max-width:600px; margin: 20px auto; border-radius: 8px;">
     <div class="choices" id="choices"></div>
   </div>
   <div class="footer">
@@ -157,11 +177,20 @@ window.onload = function(){
     const b=document.createElement('button');
     b.className='btn';
     b.textContent=label;
-    b.onclick=async()=>{
-      b.disabled=true;
-      await cb();
-      b.disabled=false;
+    
+    // 🛠️ 모바일 터치 이슈 해결을 위한 eventListener 기반 로직 (이전 수정안 적용)
+    const handler = async (e) => {
+        // e.preventDefault(); // 스크롤 방해 가능성 때문에 주석 처리
+        b.removeEventListener('touchend', handler);
+        b.removeEventListener('click', handler);
+        b.disabled=true;
+        await cb();
+        // 다음 버튼이 생성될 때까지 비활성화 유지
     };
+    
+    b.addEventListener('touchend', handler);
+    b.addEventListener('click', handler);
+    
     return b;
   }
 
@@ -196,6 +225,8 @@ window.onload = function(){
     const q=qs[state.i];
     await type(q.q,18);
     choicesEl.innerHTML='';
+    // 엔딩 GIF가 있다면 숨김 처리
+    document.getElementById('endingGif').style.display = 'none';
     q.a.forEach(opt=>{
       choicesEl.appendChild(btn(opt.label, async()=>{
         state.score+=opt.s;
@@ -208,9 +239,29 @@ window.onload = function(){
 
   async function analyze(){
     choicesEl.innerHTML='';
+    
+    // 🛠️ 글리치 효과 적용
+    out.classList.add('glitch-text');
+    
     await type('[SYSTEM]: Analyzing responses...',12);
     for(let p=0;p<=100;p+=10){ setProgress(p); await sleep(100); }
+    
+    // 🛠️ 글리치 효과 해제
+    out.classList.remove('glitch-text');
+    
     let v = state.score<=1?verdicts.low:state.score<=3?verdicts.mid:verdicts.high;
+    
+    // 🛠️ 엔딩별 GIF URL 정의 및 적용
+    const gifUrls = {
+        'SPARED': '[여기에 SPARED 엔딩 GIF 웹 주소를 넣어주세요]', 
+        'GUILTY': '[여기에 GUILTY 엔딩 GIF 웹 주소를 넣어주세요]', 
+        'IRREDEEMABLE': 'https://64.media.tumblr.com/7a11aa83b3f0345816fe55182d8fd99b/d6ef2c795654f2c0-7c/s500x750/7c5727969a34822a3495bcd1576c4a8d786b6072.gif' // 요청하신 GIF
+    };
+    
+    const gifEl = document.getElementById('endingGif');
+    gifEl.src = gifUrls[v];
+    gifEl.style.display = 'block'; // GIF 보이기
+    
     await type('[CASTLE]: Verdict - '+v,14);
     choicesEl.appendChild(btn('Run Again',()=>location.reload()));
   }
