@@ -1,39 +1,25 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const statusMessage = document.getElementById('status-message');
-    const accessCodeInput = document.getElementById('access-code');
-    const enterButton = document.getElementById('enter-button');
-    const loginPrompt = document.getElementById('login-prompt');
-    
-    // 설정된 '정답' 코드
-    const CORRECT_CODE = "3001"; 
-
-    // 초기 로딩 효과 시뮬레이션
-    setTimeout(() => {
-        statusMessage.textContent = "▷ [CODE: B-12] STATUS: AWAITING USER INPUT";
-        loginPrompt.style.display = 'block';
-    }, 2000); // 2초 후 메시지 변경
-
-    // Enter 버튼 클릭 이벤트
-    enterButton.addEventListener('click', () => {
-        const inputCode = accessCodeInput.value.trim();
-
-        if (inputCode === CORRECT_CODE) {
-            statusMessage.textContent = "✅ ACCESS GRANTED. WELCOME TO XENOSHOCK.";
-            statusMessage.style.color = '#ffff00'; // 노란색으로 강조
-            loginPrompt.style.display = 'none';
-            // 여기에 다음 페이지로 리다이렉트하는 코드를 추가할 수 있습니다.
-            // 예: window.location.href = "next_page.html";
-        } else {
-            statusMessage.textContent = "❌ ACCESS DENIED. INTRUDER DETECTED. SYSTEM LOCKDOWN INITIATED.";
-            statusMessage.style.color = '#ff0000'; // 빨간색으로 경고
-            accessCodeInput.value = ''; // 입력 필드 초기화
-        }
-    });
-
-    // Enter 키로도 버튼 클릭 가능하게 설정
-    accessCodeInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            enterButton.click();
-        }
-    });
-});
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>제노샤 입장 시뮬레이션</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="xenoshock-container">
+        <header>
+            <h1 class="pixel-text">XENOSHOCK ACCESS TERMINAL</h1>
+        </header>
+        <main>
+            <p class="pixel-text status-text" id="status-message">시스템 초기화 중...</p>
+            <div id="login-prompt">
+                <p class="pixel-text">▶ ACCESS CODE: <input type="password" id="access-code" maxlength="4"></p>
+                <button id="enter-button" class="pixel-text">ENTER</button>
+            </div>
+            <p class="pixel-text footer-text">Ver. 3.01 | OPERATIONAL</p>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
