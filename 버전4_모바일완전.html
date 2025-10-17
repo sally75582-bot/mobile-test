@@ -1,166 +1,83 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 export default function GenoshaEntry() {
-  const [identityType, setIdentityType] = useState(""); // human or mutant
-  const [name, setName] = useState("");
-  const [id, setId] = useState("");
+  const [identity, setIdentity] = useState('');
+  const [name, setName] = useState('');
+  const [idNumber, setIdNumber] = useState('');
   const [photo, setPhoto] = useState(null);
-  const [step, setStep] = useState("select"); // select | register | scanning | granted
+  const [stage, setStage] = useState(0);
+  const [audio] = useState(new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_aa9c69521b.mp3?filename=soft-success-tone-125882.mp3'));
 
-  const approvalSound = new Audio("https://assets.mixkit.co/sfx/download/mixkit-confirmation-tone-2867.mp3"); // 온화한 승인음
+  const handleIdentitySelect = (type) => {
+    setIdentity(type);
+    setStage(1);
+  };
 
-  function generateId(type, nameValue) {
-    if (!nameValue.trim()) return "";
-    const prefix = type === "mutant" ? "M" : "H";
-    const rand = Math.floor(1000 + Math.random() * 9000);
-    return `${prefix}-${rand}`;
-  }
+  const handleNameSubmit = () => {
+    if (!name) return;
+    const prefix = identity === 'mutant' ? 'M' : 'H';
+    const unique = Math.floor(100000 + Math.random() * 900000);
+    setIdNumber(`${prefix}-${unique}`);
+    setStage(2);
+  };
 
-  function handleNameInput(e) {
-    const value = e.target.value;
-    setName(value);
-    if (identityType) {
-      setId(generateId(identityType, value));
-    }
-  }
-
-  function handlePhoto(e) {
+  const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => setPhoto(reader.result);
+      reader.onload = (ev) => setPhoto(ev.target.result);
       reader.readAsDataURL(file);
+    } else {
+      setPhoto('/default_profile.png');
     }
-  }
-
-  function startRegistration(e) {
-    e.preventDefault();
-    if (!name || !id) return;
-    setStep("scanning");
-    setTimeout(() => {
-      setStep("granted");
-      approvalSound.play();
-    }, 2500);
-  }
-
-  const defaultPhoto = "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+    setStage(3);
+    audio.play();
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-[#071029] to-black text-white flex items-center justify-center p-6">
-      <div className="max-w-3xl w-full bg-black/60 border border-white/10 rounded-2xl p-8 backdrop-blur-lg shadow-2xl">
-        {step === "select" && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}>
-            <h1 className="text-xl font-semibold mb-4">정체 선택</h1>
-            <p className="text-sm text-white/70 mb-6">제노샤 입장을 위해 자신의 신분을 선택하세요.</p>
-            <div className="flex gap-4">
-              <button
-                onClick={() => { setIdentityType("human"); setStep("register"); }}
-                className="flex-1 py-3 rounded-md bg-gradient-to-r from-blue-600 to-cyan-600 text-sm font-medium shadow-md hover:opacity-95"
-              >
-                인간 (Human)
-              </button>
-              <button
-                onClick={() => { setIdentityType("mutant"); setStep("register"); }}
-                className="flex-1 py-3 rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 text-sm font-medium shadow-md hover:opacity-95"
-              >
-                뮤턴트 (Mutant)
-              </button>
-            </div>
-          </motion.div>
-        )}
+    <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white p-4">
+      {stage === 0 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-4 w-full max-w-sm">
+          <h1 className="text-xl text-center">Select Identity</h1>
+          <Button onClick={() => handleIdentitySelect('human')} className="w-full bg-gray-700 hover:bg-gray-600">Human</Button>
+          <Button onClick={() => handleIdentitySelect('mutant')} className="w-full bg-purple-700 hover:bg-purple-600">Mutant</Button>
+        </motion.div>
+      )}
 
-        {step === "register" && (
-          <motion.form
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            onSubmit={startRegistration}
-            className="space-y-5"
-          >
-            <h2 className="text-lg font-semibold mb-2">{identityType === "mutant" ? "뮤턴트 등록" : "인간 등록"}</h2>
-            <label className="block">
-              <span className="text-xs text-white/70">이름</span>
-              <input
-                value={name}
-                onChange={handleNameInput}
-                placeholder={identityType === "mutant" ? "e.g. Logan Howlett" : "e.g. Charles Xavier"}
-                className="mt-1 w-full rounded-md border border-white/10 bg-white/2 py-2 px-3 text-sm text-white placeholder-white/30 outline-none focus:ring-2 focus:ring-white/20"
-              />
-            </label>
+      {stage === 1 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-4 w-full max-w-sm">
+          <input type="text" placeholder="e.g. Logan Howlett" value={name} onChange={(e) => setName(e.target.value)} className="p-2 rounded text-black" />
+          <Button onClick={handleNameSubmit} className="bg-blue-700 hover:bg-blue-600">Generate ID</Button>
+        </motion.div>
+      )}
 
-            {id && (
-              <div className="text-sm text-white/70">자동 생성된 식별 번호: <span className="font-mono text-white">{id}</span></div>
-            )}
+      {stage === 2 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-4 w-full max-w-sm">
+          <p className="text-center">Upload your photo (optional)</p>
+          <input type="file" accept="image/*" onChange={handlePhotoUpload} className="text-sm" />
+          <Button onClick={handlePhotoUpload} className="bg-green-700 hover:bg-green-600">Skip</Button>
+        </motion.div>
+      )}
 
-            <label className="block">
-              <span className="text-xs text-white/70">사진 업로드</span>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handlePhoto}
-                className="mt-1 w-full text-xs text-white/70"
-              />
-            </label>
-
-            <button
-              type="submit"
-              className="w-full py-2 rounded-md bg-gradient-to-r from-green-600 to-emerald-600 text-sm font-medium shadow-md hover:opacity-95"
-            >
-              등록 및 확인
-            </button>
-          </motion.form>
-        )}
-
-        {step === "scanning" && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="text-center">
-            <motion.div
-              className="w-12 h-12 bg-white/6 rounded-full flex items-center justify-center mx-auto mb-4"
-              animate={{ scale: [1, 1.3, 1] }}
-              transition={{ repeat: Infinity, duration: 0.9 }}
-            />
-            <div className="text-sm font-medium">신분증 등록 중...</div>
-            <div className="text-xs text-white/60 mt-1">시스템이 신분 정보를 확인하고 있습니다.</div>
-          </motion.div>
-        )}
-
-        {step === "granted" && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }} className="text-center">
-            <h2 className="text-xl font-semibold mb-4">제노샤 입장이 허가되었습니다.</h2>
-
-            {/* 신분증 카드 포맷 */}
-            <div className="mx-auto bg-gradient-to-br from-[#0a1522] to-[#081520] border border-white/10 rounded-xl p-4 w-80 text-left shadow-xl">
-              <div className="flex items-center gap-4">
-                <img
-                  src={photo || defaultPhoto}
-                  alt="신분증 사진"
-                  className="w-20 h-20 rounded-md object-cover border border-white/10"
-                />
-                <div className="flex-1">
-                  <div className="text-sm font-semibold">{name}</div>
-                  <div className="text-xs text-white/70">ID: {id}</div>
-                  <div className="text-xs text-white/70">Type: {identityType === "mutant" ? "Mutant" : "Human"}</div>
-                </div>
-              </div>
-              <div className="mt-4 border-t border-white/10 pt-2 text-[10px] text-white/50 flex justify-between">
-                <span>GENOSHA AUTHORITY</span>
-                <span>SECURE ID SYSTEM</span>
-              </div>
-            </div>
-
-            {identityType === "human" && (
-              <p className="mt-3 text-[10px] text-white/50">등록 시 제노샤 입국 규약 및 인간보호법 제9조에 동의한 것으로 간주됩니다.</p>
-            )}
-
-            <button
-              onClick={() => { setStep("select"); setName(""); setPhoto(null); setId(""); setIdentityType(""); }}
-              className="mt-6 py-2 px-6 rounded-md border border-white/10 text-sm text-white/80 hover:bg-white/10"
-            >
-              다시 시작
-            </button>
-          </motion.div>
-        )}
-      </div>
+      {stage === 3 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-sm">
+          <Card className="bg-gray-900 text-white p-4 rounded-2xl">
+            <CardContent className="flex flex-col items-center">
+              <img src={photo || '/default_profile.png'} alt="ID Photo" className="w-32 h-32 object-cover rounded-full border-2 border-gray-600 mb-4" />
+              <p className="text-lg font-semibold">{name}</p>
+              <p className="text-sm">ID: {idNumber}</p>
+              <p className="text-xs text-gray-400">GENOSHA AUTHORITY</p>
+              {identity === 'human' && (
+                <p className="text-[10px] mt-2 text-gray-400 text-center px-2">By registering, you consent to the Genoshan Entry Protocol and the Human Protection Act, Article 9.</p>
+              )}
+            </CardContent>
+          </Card>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="text-center mt-4 text-green-400">Entry to Genosha has been granted.</motion.p>
+        </motion.div>
+      )}
     </div>
   );
 }
